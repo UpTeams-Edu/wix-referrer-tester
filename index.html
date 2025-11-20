@@ -18,7 +18,7 @@
     <h1 class="h4 mb-2">Wix Referrer &amp; UTM Tester</h1>
     <p class="text-muted small mb-4">
         1) Выбери или введи URL страницы на Wix<br>
-        2) Включи нужные группы меток (кнопки выше полей) или отметь отдельные метки галочками<br>
+        2) Включи нужные группы меток (кнопки) или отметь отдельные метки галочками<br>
         3) Открой ссылку и смотри <code>wixLocation.referrer</code> + параметры на стороне Wix
     </p>
 
@@ -59,10 +59,11 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2 mb-3">
-                <button id="enableAllBtn" class="btn btn-outline-primary btn-sm">Включить все</button>
-                <button id="enableUtmBtn" class="btn btn-outline-secondary btn-sm">Только UTM</button>
-                <button id="enableFbBtn" class="btn btn-outline-secondary btn-sm">Только FB</button>
-                <button id="disableAllBtn" class="btn btn-outline-danger btn-sm">Выключить все</button>
+                <button id="enableAllBtn"       class="btn btn-outline-primary btn-sm">Включить все</button>
+                <button id="enableUtmBtn"       class="btn btn-outline-secondary btn-sm">Только UTM</button>
+                <button id="enableFbBtn"        class="btn btn-outline-secondary btn-sm">Только FB</button>
+                <button id="enableClickIdsBtn"  class="btn btn-outline-secondary btn-sm">Только Click IDs</button>
+                <button id="disableAllBtn"      class="btn btn-outline-danger btn-sm">Выключить все</button>
             </div>
 
             <h2 class="h5 mb-3">Метки / параметры</h2>
@@ -91,14 +92,22 @@
     // --- Конфигурация параметров с группами и тестовыми значениями ---
     const PARAM_DEFS = [
         // UTM
-        { key: 'utm_source',   label: 'utm_source',   group: 'utm', placeholder: 'например: test_source',   defaultValue: 'test_source' },
-        { key: 'utm_medium',   label: 'utm_medium',   group: 'utm', placeholder: 'например: test_medium',   defaultValue: 'test_medium' },
-        { key: 'utm_campaign', label: 'utm_campaign', group: 'utm', placeholder: 'например: test_campaign', defaultValue: 'test_campaign' },
-        { key: 'utm_content',  label: 'utm_content',  group: 'utm', placeholder: 'например: test_content',  defaultValue: 'test_content' },
-        { key: 'utm_term',     label: 'utm_term',     group: 'utm', placeholder: 'например: test_term',     defaultValue: 'test_term' },
-        // FB
-        { key: 'fbc',          label: 'fbc',          group: 'fb',  placeholder: 'например: fb.test.fbc',   defaultValue: 'fb.test.fbc' },
-        { key: 'fbp',          label: 'fbp',          group: 'fb',  placeholder: 'например: fb.test.fbp',   defaultValue: 'fb.test.fbp' }
+        { key: 'utm_source',   label: 'utm_source',   group: 'utm',      placeholder: 'например: test_source',   defaultValue: 'test_source' },
+        { key: 'utm_medium',   label: 'utm_medium',   group: 'utm',      placeholder: 'например: test_medium',   defaultValue: 'test_medium' },
+        { key: 'utm_campaign', label: 'utm_campaign', group: 'utm',      placeholder: 'например: test_campaign', defaultValue: 'test_campaign' },
+        { key: 'utm_content',  label: 'utm_content',  group: 'utm',      placeholder: 'например: test_content',  defaultValue: 'test_content' },
+        { key: 'utm_term',     label: 'utm_term',     group: 'utm',      placeholder: 'например: test_term',     defaultValue: 'test_term' },
+        // FB params
+        { key: 'fbc',          label: 'fbc',          group: 'fb',       placeholder: 'например: fb.test.fbc',   defaultValue: 'fb.test.fbc' },
+        { key: 'fbp',          label: 'fbp',          group: 'fb',       placeholder: 'например: fb.test.fbp',   defaultValue: 'fb.test.fbp' },
+        // Click IDs
+        { key: 'fbclid',       label: 'fbclid',       group: 'clickids', placeholder: 'например: test_fbclid',   defaultValue: 'test_fbclid' },
+        { key: 'gclid',        label: 'gclid',        group: 'clickids', placeholder: 'например: test_gclid',    defaultValue: 'test_gclid' },
+        { key: 'ttclid',       label: 'ttclid',       group: 'clickids', placeholder: 'например: test_ttclid',   defaultValue: 'test_ttclid' },
+        { key: 'ymclid',       label: 'ymclid',       group: 'clickids', placeholder: 'например: test_ymclid',   defaultValue: 'test_ymclid' },
+        { key: 'yclid',        label: 'yclid',        group: 'clickids', placeholder: 'например: test_yclid',    defaultValue: 'test_yclid' },
+        { key: 'gbraid',       label: 'gbraid',       group: 'clickids', placeholder: 'например: test_gbraid',   defaultValue: 'test_gbraid' },
+        { key: 'wbraid',       label: 'wbraid',       group: 'clickids', placeholder: 'например: test_wbraid',   defaultValue: 'test_wbraid' }
     ];
 
     const STORAGE_KEYS = {
@@ -106,21 +115,22 @@
         PARAMS:   'wixRefTester.params'
     };
 
-    const presetHostSelect = document.getElementById('presetHost');
-    const baseUrlInput     = document.getElementById('baseUrl');
-    const baseUrlStatus    = document.getElementById('baseUrlStatus');
-    const saveBaseUrlBtn   = document.getElementById('saveBaseUrlBtn');
+    const presetHostSelect   = document.getElementById('presetHost');
+    const baseUrlInput       = document.getElementById('baseUrl');
+    const baseUrlStatus      = document.getElementById('baseUrlStatus');
+    const saveBaseUrlBtn     = document.getElementById('saveBaseUrlBtn');
 
-    const paramsContainer  = document.getElementById('paramsContainer');
-    const resultUrlEl      = document.getElementById('resultUrl');
-    const resultNoteEl     = document.getElementById('resultNote');
-    const openBtn          = document.getElementById('openBtn');
-    const copyBtn          = document.getElementById('copyBtn');
+    const paramsContainer    = document.getElementById('paramsContainer');
+    const resultUrlEl        = document.getElementById('resultUrl');
+    const resultNoteEl       = document.getElementById('resultNote');
+    const openBtn            = document.getElementById('openBtn');
+    const copyBtn            = document.getElementById('copyBtn');
 
-    const enableAllBtn     = document.getElementById('enableAllBtn');
-    const enableUtmBtn     = document.getElementById('enableUtmBtn');
-    const enableFbBtn      = document.getElementById('enableFbBtn');
-    const disableAllBtn    = document.getElementById('disableAllBtn');
+    const enableAllBtn       = document.getElementById('enableAllBtn');
+    const enableUtmBtn       = document.getElementById('enableUtmBtn');
+    const enableFbBtn        = document.getElementById('enableFbBtn');
+    const enableClickIdsBtn  = document.getElementById('enableClickIdsBtn');
+    const disableAllBtn      = document.getElementById('disableAllBtn');
 
     // --- Состояние параметров ---
     function getDefaultParamsState() {
@@ -141,7 +151,6 @@
         const savedBaseUrl = localStorage.getItem(STORAGE_KEYS.BASE_URL);
         if (savedBaseUrl) {
             baseUrlInput.value = savedBaseUrl;
-            // если savedBaseUrl совпадает с одним из пресетов — выберем его
             Array.from(presetHostSelect.options).forEach(opt => {
                 if (opt.value === savedBaseUrl) {
                     presetHostSelect.value = savedBaseUrl;
@@ -224,11 +233,20 @@
             row.className = 'row align-items-center border-bottom py-2';
 
             const colLabel = document.createElement('div');
-            colLabel.className = 'col-12 col-md-3';
+            colLabel.className = 'col-12 col-md-4';
 
             const badge = document.createElement('span');
-            badge.className = 'badge rounded-pill text-bg-secondary me-1';
-            badge.textContent = def.group.toUpperCase();
+            badge.className = 'badge rounded-pill me-2';
+            if (def.group === 'utm') {
+                badge.classList.add('text-bg-primary');
+                badge.textContent = 'UTM';
+            } else if (def.group === 'fb') {
+                badge.classList.add('text-bg-info');
+                badge.textContent = 'FB';
+            } else if (def.group === 'clickids') {
+                badge.classList.add('text-bg-warning');
+                badge.textContent = 'Click ID';
+            }
 
             const formCheck = document.createElement('div');
             formCheck.className = 'form-check d-inline-flex align-items-center gap-2';
@@ -251,7 +269,7 @@
             colLabel.appendChild(formCheck);
 
             const colInput = document.createElement('div');
-            colInput.className = 'col-12 col-md-9 mt-2 mt-md-0';
+            colInput.className = 'col-12 col-md-8 mt-2 mt-md-0';
 
             const input = document.createElement('input');
             input.type = 'text';
@@ -326,7 +344,7 @@
     }
 
     // --- Групповые переключатели ---
-    function setGroupEnabled({ utm, fb }) {
+    function setGroupEnabled({ utm, fb, clickids }) {
         PARAM_DEFS.forEach(def => {
             const group = def.group;
             if (group === 'utm' && typeof utm === 'boolean') {
@@ -334,6 +352,9 @@
             }
             if (group === 'fb' && typeof fb === 'boolean') {
                 paramsState[def.key].enabled = fb;
+            }
+            if (group === 'clickids' && typeof clickids === 'boolean') {
+                paramsState[def.key].enabled = clickids;
             }
         });
         saveParams();
@@ -347,25 +368,29 @@
 
     presetHostSelect.addEventListener('change', () => {
         const val = presetHostSelect.value;
-        if (!val) return; // "Свой URL"
+        if (!val) return;
         baseUrlInput.value = val;
         saveBaseUrl();
     });
 
     enableAllBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: true, fb: true });
+        setGroupEnabled({ utm: true, fb: true, clickids: true });
     });
 
     enableUtmBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: true, fb: false });
+        setGroupEnabled({ utm: true, fb: false, clickids: false });
     });
 
     enableFbBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: false, fb: true });
+        setGroupEnabled({ utm: false, fb: true, clickids: false });
+    });
+
+    enableClickIdsBtn.addEventListener('click', () => {
+        setGroupEnabled({ utm: false, fb: false, clickids: true });
     });
 
     disableAllBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: false, fb: false });
+        setGroupEnabled({ utm: false, fb: false, clickids: false });
     });
 
     // --- Init ---
