@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Wix Referrer & UTM Tester</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CSS с CDN -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous"
+    >
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <h1 class="h4 mb-2">Wix Referrer &amp; UTM Tester</h1>
+    <p class="text-muted small mb-4">
+        1) Выбери или введи URL страницы на Wix<br>
+        2) Включи нужные группы меток (кнопки выше полей) или отметь отдельные метки галочками<br>
+        3) Открой ссылку и смотри <code>wixLocation.referrer</code> + параметры на стороне Wix
+    </p>
+
+    <!-- Base URL -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="presetHost" class="form-label">Выбрать страницу</label>
+                <select id="presetHost" class="form-select">
+                    <option value="">— Свой URL —</option>
+                    <option value="https://www.my-ait.com/career-consultation">my-ait.com / career-consultation</option>
+                    <option value="https://www.my-ait.com/accounting">my-ait.com / accounting</option>
+                    <option value="https://www.my-ait.com/it">my-ait.com / it</option>
+                    <option value="https://www.my-ait.com/development">my-ait.com / development</option>
+                    <option value="https://www.my-ait.com/buchhalter">my-ait.com / buchhalter</option>
+                    <option value="https://www.my-ait.com/us">my-ait.com / us</option>
+                    <option value="https://www.aitschools.com/">aitschools.com / (главная)</option>
+                    <option value="https://www.aitschools.com/career-consultation">aitschools.com / career-consultation</option>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label for="baseUrl" class="form-label">Base URL (страница на Wix)</label>
+                <input id="baseUrl" type="text" class="form-control"
+                       placeholder="Например: https://www.my-ait.com/career-consultation">
+            </div>
+
+            <div class="small text-muted mb-2">
+                Можно выбрать из списка выше или отредактировать вручную. Этот URL будет основой, к нему добавятся выбранные параметры.
+            </div>
+
+            <button id="saveBaseUrlBtn" class="btn btn-primary btn-sm me-2">Сохранить Base URL</button>
+            <span id="baseUrlStatus" class="small text-muted"></span>
+        </div>
+    </div>
+
+    <!-- Params -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button id="enableAllBtn" class="btn btn-outline-primary btn-sm">Включить все</button>
+                <button id="enableUtmBtn" class="btn btn-outline-secondary btn-sm">Только UTM</button>
+                <button id="enableFbBtn" class="btn btn-outline-secondary btn-sm">Только FB</button>
+                <button id="disableAllBtn" class="btn btn-outline-danger btn-sm">Выключить все</button>
+            </div>
+
+            <h2 class="h5 mb-3">Метки / параметры</h2>
+            <div id="paramsContainer"></div>
+            <div class="small text-muted mt-2">
+                Отмеченные галочкой параметры попадут в ссылку. Значения по умолчанию — тестовые, можно править.
+            </div>
+        </div>
+    </div>
+
+    <!-- Result -->
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Сгенерированная ссылка</h2>
+            <pre class="bg-light p-2 rounded small mb-2"><code id="resultUrl">Сначала укажи Base URL</code></pre>
+            <div id="resultNote" class="small text-muted mb-3"></div>
+            <div class="d-flex flex-wrap gap-2">
+                <button id="openBtn" class="btn btn-success btn-sm" disabled>Открыть</button>
+                <button id="copyBtn" class="btn btn-outline-secondary btn-sm" disabled>Копировать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Конфигурация параметров с группами и тестовыми значениями ---
+    const PARAM_DEFS = [
+        // UTM
+        { key: 'utm_source',   label: 'utm_source',   group: 'utm', placeholder: 'например: test_source',   defaultValue: 'test_source' },
+        { key: 'utm_medium',   label: 'utm_medium',   group: 'utm', placeholder: 'например: test_medium',   defaultValue: 'test_medium' },
+        { key: 'utm_campaign', label: 'utm_campaign', group: 'utm', placeholder: 'например: test_campaign', defaultValue: 'test_campaign' },
+        { key: 'utm_content',  label: 'utm_content',  group: 'utm', placeholder: 'например: test_content',  defaultValue: 'test_content' },
+        { key: 'utm_term',     label: 'utm_term',     group: 'utm', placeholder: 'например: test_term',     defaultValue: 'test_term' },
+        // FB
+        { key: 'fbc',          label: 'fbc',          group: 'fb',  placeholder: 'например: fb.test.fbc',   defaultValue: 'fb.test.fbc' },
+        { key: 'fbp',          label: 'fbp',          group: 'fb',  placeholder: 'например: fb.test.fbp',   defaultValue: 'fb.test.fbp' }
+    ];
+
+    const STORAGE_KEYS = {
+        BASE_URL: 'wixRefTester.baseUrl',
+        PARAMS:   'wixRefTester.params'
+    };
+
+    const presetHostSelect = document.getElementById('presetHost');
+    const baseUrlInput     = document.getElementById('baseUrl');
+    const baseUrlStatus    = document.getElementById('baseUrlStatus');
+    const saveBaseUrlBtn   = document.getElementById('saveBaseUrlBtn');
+
+    const paramsContainer  = document.getElementById('paramsContainer');
+    const resultUrlEl      = document.getElementById('resultUrl');
+    const resultNoteEl     = document.getElementById('resultNote');
+    const openBtn          = document.getElementById('openBtn');
+    const copyBtn          = document.getElementById('copyBtn');
+
+    const enableAllBtn     = document.getElementById('enableAllBtn');
+    const enableUtmBtn     = document.getElementById('enableUtmBtn');
+    const enableFbBtn      = document.getElementById('enableFbBtn');
+    const disableAllBtn    = document.getElementById('disableAllBtn');
+
+    // --- Состояние параметров ---
+    function getDefaultParamsState() {
+        const state = {};
+        PARAM_DEFS.forEach(def => {
+            state[def.key] = {
+                enabled: false,
+                value: def.defaultValue || ''
+            };
+        });
+        return state;
+    }
+
+    let paramsState = getDefaultParamsState();
+
+    // --- LocalStorage helpers ---
+    function loadState() {
+        const savedBaseUrl = localStorage.getItem(STORAGE_KEYS.BASE_URL);
+        if (savedBaseUrl) {
+            baseUrlInput.value = savedBaseUrl;
+            // если savedBaseUrl совпадает с одним из пресетов — выберем его
+            Array.from(presetHostSelect.options).forEach(opt => {
+                if (opt.value === savedBaseUrl) {
+                    presetHostSelect.value = savedBaseUrl;
+                }
+            });
+        }
+
+        const savedParams = localStorage.getItem(STORAGE_KEYS.PARAMS);
+        if (savedParams) {
+            try {
+                const parsed = JSON.parse(savedParams);
+                const defaults = getDefaultParamsState();
+                paramsState = { ...defaults, ...parsed };
+            } catch (e) {
+                paramsState = getDefaultParamsState();
+            }
+        }
+
+        renderParams();
+        renderResult();
+    }
+
+    function saveBaseUrl() {
+        const url = baseUrlInput.value.trim();
+        if (!url) {
+            baseUrlStatus.textContent = 'Введите корректный URL';
+            return;
+        }
+        localStorage.setItem(STORAGE_KEYS.BASE_URL, url);
+        baseUrlStatus.textContent = 'Сохранено';
+        setTimeout(() => (baseUrlStatus.textContent = ''), 2000);
+        renderResult();
+    }
+
+    function saveParams() {
+        localStorage.setItem(STORAGE_KEYS.PARAMS, JSON.stringify(paramsState));
+    }
+
+    // --- Генерация URL ---
+    function buildUrl(baseUrl, paramsState) {
+        if (!baseUrl) return '';
+
+        const activeParams = {};
+        Object.keys(paramsState).forEach(key => {
+            const { enabled, value } = paramsState[key];
+            const v = (value || '').trim();
+            if (enabled && v) {
+                activeParams[key] = v;
+            }
+        });
+
+        if (!Object.keys(activeParams).length) {
+            return baseUrl;
+        }
+
+        try {
+            const url = new URL(baseUrl);
+            Object.entries(activeParams).forEach(([key, value]) => {
+                url.searchParams.set(key, value);
+            });
+            return url.toString();
+        } catch (e) {
+            const hasQuery = baseUrl.includes('?');
+            const sep = hasQuery ? '&' : '?';
+            const query = Object.entries(activeParams)
+                .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+                .join('&');
+            return baseUrl + sep + query;
+        }
+    }
+
+    // --- Рендер параметров ---
+    function renderParams() {
+        paramsContainer.innerHTML = '';
+
+        PARAM_DEFS.forEach(def => {
+            const state = paramsState[def.key] || { enabled: false, value: def.defaultValue || '' };
+
+            const row = document.createElement('div');
+            row.className = 'row align-items-center border-bottom py-2';
+
+            const colLabel = document.createElement('div');
+            colLabel.className = 'col-12 col-md-3';
+
+            const badge = document.createElement('span');
+            badge.className = 'badge rounded-pill text-bg-secondary me-1';
+            badge.textContent = def.group.toUpperCase();
+
+            const formCheck = document.createElement('div');
+            formCheck.className = 'form-check d-inline-flex align-items-center gap-2';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
+            checkbox.id = 'chk_' + def.key;
+            checkbox.dataset.param = def.key;
+
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = checkbox.id;
+            label.textContent = def.label;
+
+            formCheck.appendChild(checkbox);
+            formCheck.appendChild(label);
+
+            colLabel.appendChild(badge);
+            colLabel.appendChild(formCheck);
+
+            const colInput = document.createElement('div');
+            colInput.className = 'col-12 col-md-9 mt-2 mt-md-0';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-control form-control-sm';
+            input.placeholder = def.placeholder || '';
+            input.dataset.param = def.key;
+
+            colInput.appendChild(input);
+
+            row.appendChild(colLabel);
+            row.appendChild(colInput);
+            paramsContainer.appendChild(row);
+
+            // init state
+            checkbox.checked = state.enabled;
+            input.value = state.value || def.defaultValue || '';
+
+            checkbox.addEventListener('change', () => {
+                paramsState[def.key].enabled = checkbox.checked;
+
+                if (checkbox.checked && (!paramsState[def.key].value || !paramsState[def.key].value.trim())) {
+                    paramsState[def.key].value = def.defaultValue || '';
+                    input.value = paramsState[def.key].value;
+                }
+
+                saveParams();
+                renderResult();
+            });
+
+            input.addEventListener('input', () => {
+                paramsState[def.key].value = input.value;
+                saveParams();
+                renderResult();
+            });
+        });
+    }
+
+    // --- Рендер результата ---
+    function renderResult() {
+        const baseUrl = baseUrlInput.value.trim();
+
+        if (!baseUrl) {
+            resultUrlEl.textContent = 'Сначала укажи Base URL';
+            resultNoteEl.textContent = '';
+            openBtn.disabled = true;
+            copyBtn.disabled = true;
+            return;
+        }
+
+        const fullUrl = buildUrl(baseUrl, paramsState);
+        resultUrlEl.textContent = fullUrl;
+        resultNoteEl.textContent =
+            'Нажми «Открыть», чтобы отправить referer с GitHub Pages на выбранную страницу Wix с текущим набором параметров.';
+
+        openBtn.disabled = false;
+        copyBtn.disabled = false;
+
+        openBtn.onclick = () => {
+            window.open(fullUrl, '_blank', 'noopener');
+        };
+
+        copyBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(fullUrl);
+                const oldText = copyBtn.textContent;
+                copyBtn.textContent = 'Скопировано';
+                setTimeout(() => (copyBtn.textContent = oldText), 1500);
+            } catch (e) {
+                alert('Не удалось скопировать. Скопируй вручную из блока выше.');
+            }
+        };
+    }
+
+    // --- Групповые переключатели ---
+    function setGroupEnabled({ utm, fb }) {
+        PARAM_DEFS.forEach(def => {
+            const group = def.group;
+            if (group === 'utm' && typeof utm === 'boolean') {
+                paramsState[def.key].enabled = utm;
+            }
+            if (group === 'fb' && typeof fb === 'boolean') {
+                paramsState[def.key].enabled = fb;
+            }
+        });
+        saveParams();
+        renderParams();
+        renderResult();
+    }
+
+    // --- Handlers ---
+    saveBaseUrlBtn.addEventListener('click', saveBaseUrl);
+    baseUrlInput.addEventListener('blur', saveBaseUrl);
+
+    presetHostSelect.addEventListener('change', () => {
+        const val = presetHostSelect.value;
+        if (!val) return; // "Свой URL"
+        baseUrlInput.value = val;
+        saveBaseUrl();
+    });
+
+    enableAllBtn.addEventListener('click', () => {
+        setGroupEnabled({ utm: true, fb: true });
+    });
+
+    enableUtmBtn.addEventListener('click', () => {
+        setGroupEnabled({ utm: true, fb: false });
+    });
+
+    enableFbBtn.addEventListener('click', () => {
+        setGroupEnabled({ utm: false, fb: true });
+    });
+
+    disableAllBtn.addEventListener('click', () => {
+        setGroupEnabled({ utm: false, fb: false });
+    });
+
+    // --- Init ---
+    loadState();
+</script>
+</body>
+</html>
