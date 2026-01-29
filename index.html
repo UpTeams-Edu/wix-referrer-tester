@@ -36,7 +36,26 @@
                     <option value="https://www.my-ait.com/buchhalter">my-ait.com / buchhalter</option>
                     <option value="https://www.my-ait.com/us">my-ait.com / us</option>
                     <option value="https://www.aitschools.com/">aitschools.com / (главная)</option>
-                    <option value="https://www.aitschools.com/career-consultation">aitschools.com / career-consultation</option>
+                    <option value="https://www.aitschools.com/career-consultation">aitschools.com /
+                        career-consultation
+                    </option>
+
+                    <option value="https://www.rancode.at/course-modules-en/programming-language-basics">rancode.at /
+                        Programming-language-basics
+                    </option>
+                    <option value="https://www.rancode.at/course-modules-en/web-programming">rancode.at /
+                        Web-programming
+                    </option>
+                    <option value="https://www.rancode.at/course-modules-en/core-java-i">rancode.at / Core Java I
+                    </option>
+                    <option value="https://www.rancode.at/course-modules-en/core-java-ii">rancode.at / Core Java II
+                    </option>
+                    <option value="https://www.rancode.at/course-modules-en/databases-basics">rancode.at / Databases
+                        basics
+                    </option>
+                    <option value="https://www.rancode.at/course-modules-en/java-technologies">rancode.at / Java
+                        technologies
+                    </option>
                 </select>
             </div>
 
@@ -47,7 +66,8 @@
             </div>
 
             <div class="small text-muted mb-2">
-                Можно выбрать из списка выше или отредактировать вручную. Этот URL будет основой, к нему добавятся выбранные параметры.
+                Можно выбрать из списка выше или отредактировать вручную. Этот URL будет основой, к нему добавятся
+                выбранные параметры.
             </div>
 
             <button id="saveBaseUrlBtn" class="btn btn-primary btn-sm me-2">Сохранить Base URL</button>
@@ -59,11 +79,11 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2 mb-3">
-                <button id="enableAllBtn"       class="btn btn-outline-primary btn-sm">Включить все</button>
-                <button id="enableUtmBtn"       class="btn btn-outline-secondary btn-sm">Только UTM</button>
-                <button id="enableFbBtn"        class="btn btn-outline-secondary btn-sm">Только FB</button>
-                <button id="enableClickIdsBtn"  class="btn btn-outline-secondary btn-sm">Только Click IDs</button>
-                <button id="disableAllBtn"      class="btn btn-outline-danger btn-sm">Выключить все</button>
+                <button id="enableAllBtn" class="btn btn-outline-primary btn-sm">Включить все</button>
+                <button id="enableUtmBtn" class="btn btn-outline-secondary btn-sm">Только UTM</button>
+                <button id="enableFbBtn" class="btn btn-outline-secondary btn-sm">Только FB</button>
+                <button id="enableClickIdsBtn" class="btn btn-outline-secondary btn-sm">Только Click IDs</button>
+                <button id="disableAllBtn" class="btn btn-outline-danger btn-sm">Выключить все</button>
             </div>
 
             <h2 class="h5 mb-3">Метки / параметры</h2>
@@ -92,45 +112,117 @@
     // --- Конфигурация параметров с группами и тестовыми значениями ---
     const PARAM_DEFS = [
         // UTM
-        { key: 'utm_source',   label: 'utm_source',   group: 'utm',      placeholder: 'например: test_source',   defaultValue: 'test_source' },
-        { key: 'utm_medium',   label: 'utm_medium',   group: 'utm',      placeholder: 'например: test_medium',   defaultValue: 'test_medium' },
-        { key: 'utm_campaign', label: 'utm_campaign', group: 'utm',      placeholder: 'например: test_campaign', defaultValue: 'test_campaign' },
-        { key: 'utm_content',  label: 'utm_content',  group: 'utm',      placeholder: 'например: test_content',  defaultValue: 'test_content' },
-        { key: 'utm_term',     label: 'utm_term',     group: 'utm',      placeholder: 'например: test_term',     defaultValue: 'test_term' },
+        {
+            key: 'utm_source',
+            label: 'utm_source',
+            group: 'utm',
+            placeholder: 'например: test_source',
+            defaultValue: 'test_source'
+        },
+        {
+            key: 'utm_medium',
+            label: 'utm_medium',
+            group: 'utm',
+            placeholder: 'например: test_medium',
+            defaultValue: 'test_medium'
+        },
+        {
+            key: 'utm_campaign',
+            label: 'utm_campaign',
+            group: 'utm',
+            placeholder: 'например: test_campaign',
+            defaultValue: 'test_campaign'
+        },
+        {
+            key: 'utm_content',
+            label: 'utm_content',
+            group: 'utm',
+            placeholder: 'например: test_content',
+            defaultValue: 'test_content'
+        },
+        {
+            key: 'utm_term',
+            label: 'utm_term',
+            group: 'utm',
+            placeholder: 'например: test_term',
+            defaultValue: 'test_term'
+        },
         // FB params
-        { key: 'fbc',          label: 'fbc',          group: 'fb',       placeholder: 'например: fb.test.fbc',   defaultValue: 'fb.test.fbc' },
-        { key: 'fbp',          label: 'fbp',          group: 'fb',       placeholder: 'например: fb.test.fbp',   defaultValue: 'fb.test.fbp' },
+        {key: 'fbc', label: 'fbc', group: 'fb', placeholder: 'например: fb.test.fbc', defaultValue: 'fb.test.fbc'},
+        {key: 'fbp', label: 'fbp', group: 'fb', placeholder: 'например: fb.test.fbp', defaultValue: 'fb.test.fbp'},
         // Click IDs
-        { key: 'fbclid',       label: 'fbclid',       group: 'clickids', placeholder: 'например: test_fbclid',   defaultValue: 'test_fbclid' },
-        { key: 'gclid',        label: 'gclid',        group: 'clickids', placeholder: 'например: test_gclid',    defaultValue: 'test_gclid' },
-        { key: 'ttclid',       label: 'ttclid',       group: 'clickids', placeholder: 'например: test_ttclid',   defaultValue: 'test_ttclid' },
-        { key: 'ymclid',       label: 'ymclid',       group: 'clickids', placeholder: 'например: test_ymclid',   defaultValue: 'test_ymclid' },
-        { key: 'yclid',        label: 'yclid',        group: 'clickids', placeholder: 'например: test_yclid',    defaultValue: 'test_yclid' },
-        { key: 'gbraid',       label: 'gbraid',       group: 'clickids', placeholder: 'например: test_gbraid',   defaultValue: 'test_gbraid' },
-        { key: 'wbraid',       label: 'wbraid',       group: 'clickids', placeholder: 'например: test_wbraid',   defaultValue: 'test_wbraid' }
+        {
+            key: 'fbclid',
+            label: 'fbclid',
+            group: 'clickids',
+            placeholder: 'например: test_fbclid',
+            defaultValue: 'test_fbclid'
+        },
+        {
+            key: 'gclid',
+            label: 'gclid',
+            group: 'clickids',
+            placeholder: 'например: test_gclid',
+            defaultValue: 'test_gclid'
+        },
+        {
+            key: 'ttclid',
+            label: 'ttclid',
+            group: 'clickids',
+            placeholder: 'например: test_ttclid',
+            defaultValue: 'test_ttclid'
+        },
+        {
+            key: 'ymclid',
+            label: 'ymclid',
+            group: 'clickids',
+            placeholder: 'например: test_ymclid',
+            defaultValue: 'test_ymclid'
+        },
+        {
+            key: 'yclid',
+            label: 'yclid',
+            group: 'clickids',
+            placeholder: 'например: test_yclid',
+            defaultValue: 'test_yclid'
+        },
+        {
+            key: 'gbraid',
+            label: 'gbraid',
+            group: 'clickids',
+            placeholder: 'например: test_gbraid',
+            defaultValue: 'test_gbraid'
+        },
+        {
+            key: 'wbraid',
+            label: 'wbraid',
+            group: 'clickids',
+            placeholder: 'например: test_wbraid',
+            defaultValue: 'test_wbraid'
+        }
     ];
 
     const STORAGE_KEYS = {
         BASE_URL: 'wixRefTester.baseUrl',
-        PARAMS:   'wixRefTester.params'
+        PARAMS: 'wixRefTester.params'
     };
 
-    const presetHostSelect   = document.getElementById('presetHost');
-    const baseUrlInput       = document.getElementById('baseUrl');
-    const baseUrlStatus      = document.getElementById('baseUrlStatus');
-    const saveBaseUrlBtn     = document.getElementById('saveBaseUrlBtn');
+    const presetHostSelect = document.getElementById('presetHost');
+    const baseUrlInput = document.getElementById('baseUrl');
+    const baseUrlStatus = document.getElementById('baseUrlStatus');
+    const saveBaseUrlBtn = document.getElementById('saveBaseUrlBtn');
 
-    const paramsContainer    = document.getElementById('paramsContainer');
-    const resultUrlEl        = document.getElementById('resultUrl');
-    const resultNoteEl       = document.getElementById('resultNote');
-    const openBtn            = document.getElementById('openBtn');
-    const copyBtn            = document.getElementById('copyBtn');
+    const paramsContainer = document.getElementById('paramsContainer');
+    const resultUrlEl = document.getElementById('resultUrl');
+    const resultNoteEl = document.getElementById('resultNote');
+    const openBtn = document.getElementById('openBtn');
+    const copyBtn = document.getElementById('copyBtn');
 
-    const enableAllBtn       = document.getElementById('enableAllBtn');
-    const enableUtmBtn       = document.getElementById('enableUtmBtn');
-    const enableFbBtn        = document.getElementById('enableFbBtn');
-    const enableClickIdsBtn  = document.getElementById('enableClickIdsBtn');
-    const disableAllBtn      = document.getElementById('disableAllBtn');
+    const enableAllBtn = document.getElementById('enableAllBtn');
+    const enableUtmBtn = document.getElementById('enableUtmBtn');
+    const enableFbBtn = document.getElementById('enableFbBtn');
+    const enableClickIdsBtn = document.getElementById('enableClickIdsBtn');
+    const disableAllBtn = document.getElementById('disableAllBtn');
 
     // --- Состояние параметров ---
     function getDefaultParamsState() {
@@ -163,7 +255,7 @@
             try {
                 const parsed = JSON.parse(savedParams);
                 const defaults = getDefaultParamsState();
-                paramsState = { ...defaults, ...parsed };
+                paramsState = {...defaults, ...parsed};
             } catch (e) {
                 paramsState = getDefaultParamsState();
             }
@@ -195,7 +287,7 @@
 
         const activeParams = {};
         Object.keys(paramsState).forEach(key => {
-            const { enabled, value } = paramsState[key];
+            const {enabled, value} = paramsState[key];
             const v = (value || '').trim();
             if (enabled && v) {
                 activeParams[key] = v;
@@ -227,7 +319,7 @@
         paramsContainer.innerHTML = '';
 
         PARAM_DEFS.forEach(def => {
-            const state = paramsState[def.key] || { enabled: false, value: def.defaultValue || '' };
+            const state = paramsState[def.key] || {enabled: false, value: def.defaultValue || ''};
 
             const row = document.createElement('div');
             row.className = 'row align-items-center border-bottom py-2';
@@ -344,7 +436,7 @@
     }
 
     // --- Групповые переключатели ---
-    function setGroupEnabled({ utm, fb, clickids }) {
+    function setGroupEnabled({utm, fb, clickids}) {
         PARAM_DEFS.forEach(def => {
             const group = def.group;
             if (group === 'utm' && typeof utm === 'boolean') {
@@ -374,23 +466,23 @@
     });
 
     enableAllBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: true, fb: true, clickids: true });
+        setGroupEnabled({utm: true, fb: true, clickids: true});
     });
 
     enableUtmBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: true, fb: false, clickids: false });
+        setGroupEnabled({utm: true, fb: false, clickids: false});
     });
 
     enableFbBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: false, fb: true, clickids: false });
+        setGroupEnabled({utm: false, fb: true, clickids: false});
     });
 
     enableClickIdsBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: false, fb: false, clickids: true });
+        setGroupEnabled({utm: false, fb: false, clickids: true});
     });
 
     disableAllBtn.addEventListener('click', () => {
-        setGroupEnabled({ utm: false, fb: false, clickids: false });
+        setGroupEnabled({utm: false, fb: false, clickids: false});
     });
 
     // --- Init ---
